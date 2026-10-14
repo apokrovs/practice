@@ -17,13 +17,13 @@ const MachineComponent = () => {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null> (null);
 
-    const updateMachine (id: string, newStatus: "online" | "offline") =>
+    const updateMachine = async (id: string, newStatus: "online" | "offline") =>
     {
         try {
-            const response = await fetch ("http://127.0.0.1:8000/machines/${id}",
+            const response = await fetch (`http://127.0.0.1:8000/machines/${id}`,
             {
                 method: "PUT",
-                headers: { "Conetne-Type": "application/json"},
+                headers: { "Content-Type": "application/json"},
                 body: JSON.stringify({
                     status: newStatus,
                 }),
@@ -32,17 +32,16 @@ const MachineComponent = () => {
         )
             if (!response.ok){
                     throw new Error("Failed to fetch machines");
-            }  
+            }
+            fetchMachines() 
         }
         catch (err){
             setError(err instanceof Error ? err.message : "snth wrong")
         }
     }
-
-    useEffect(() => {
-        const fetchMachines = async () => {
+    const fetchMachines = async () => {
             try {
-                const response = await fetch ("http://127.0.0.1:8000/machines")
+                const response = await fetch (`http://127.0.0.1:8000/machines`)
 
                 if (!response.ok){
                     throw new Error("Failed to fetch machines");
@@ -57,8 +56,10 @@ const MachineComponent = () => {
             }
         };
 
-        fetchMachines();
-    }, [])
+    useEffect(() => {
+
+        fetchMachines().catch(console.error);
+    }, [], )
 
     if (loading) {
         return <p>Loading machines...</p>;
@@ -79,7 +80,9 @@ const MachineComponent = () => {
             {displayedMachines.map(machine => 
                 (<p key = {machine.id}> 
                 {machine.id} - {machine.status} 
+                <button onClick={() => updateMachine(machine.id, machine.status == "online" ? "offline" : "online")}></button>
                 </p>
+                
             ))}
 
             <button onClick={()=>setShowOnlyOnline(!showOnlyOnline)}>

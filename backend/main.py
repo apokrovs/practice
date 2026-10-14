@@ -59,8 +59,8 @@ def get_machines():
 def update_machine(id: str, update: MachineUpdate):
     with sqlite3.connect("machines.db") as conn:
         cursor = conn.execute(
-            "UPDATE machines" \
-            "SET status = ?" \
+            "UPDATE machines " \
+            "SET status = ? " \
             "WHERE id = ?", (update.status, id)
         )
         if cursor.rowcount == 0:
