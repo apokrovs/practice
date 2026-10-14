@@ -1,11 +1,24 @@
-def longest_increasing_streak(temperatures):
-    max_len = 1
-    current = 1
+def longest_subarray_k_distinct(temperatures, k):
+    freqs = {}
 
-    for i in range(1, len(temperatures)):
-        if temperatures[i] > temperatures[i-1]:
-            current +=1
-            max_len = max(max_len, current)
+    left = 0
+    max_length = 0
+
+    for right, t in enumerate(temperatures):
+        if t in freqs:
+           freqs[t]+=1
         else:
-            current = 1
-    return max_len
+            freqs[t] = 1
+
+        while len(freqs) > k:
+            freqs[temperatures[left]] -= 1
+        
+            if freqs[temperatures[left]] == 0:
+                freqs.pop(temperatures[left])
+
+            left+=1
+        max_length = max(max_length, right-left+1)
+            
+           
+    return max_length
+                
