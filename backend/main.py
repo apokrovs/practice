@@ -1,71 +1,34 @@
-from fastapi import FastAPI, HTTPException, status
-import sqlite3
-from contextlib import closing
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import Literal
+def latest_temperature(readings):
+    latest_temp = {}
+    recent_time = {}
 
-app = FastAPI()
+    for r in readings:
+        if r[0] in recent_time:
+            if recent_time[r[0]] < r[1]:
+                recent_time[r[0]] = r[1]
+                latest_temp[r[0]] = r[2]
+        else:
+            recent_time[r[0]] = r[1]
+            latest_temp[r[0]] = r[2]
+    return latest_temp
 
+def average_temperatures(readings):
+    averages = {}
 
+    for r in readings:
+        if r[1] < 15:
+            continue
+        if r[0] in averages:
+            sum,count = averages[r[0]][0], averages[r[0]][1]
+            sum += r[2]
+            count +=1
+            averages[r[0]] = (sum, count)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+        else:
+            averages[r[0]] = (r[2], 1)
+        result = {}
 
-
-def init_db():
-    with closing(sqlite3.connect("machines.db")) as conn:
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS machines (
-                id TEXT PRIMARY KEY,
-                status TEXT NOT NULL
-                    CHECK (status IN ('online', 'offline'))
-            )
-        """)
-
-        conn.executemany(
-            "INSERT OR IGNORE INTO machines (id, status) VALUES (?, ?)",
-            [
-                ("machine-1", "online"),
-                ("machine-2", "offline"),
-                ("machine-3", "online"),
-            ],
-        )
-
-        conn.commit()
-
-
-init_db()
-
-class MachineUpdate(BaseModel):
-    status: Literal["online","offline"]
-
-@app.get("/machines")
-def get_machines():
-    with sqlite3.connect("machines.db") as conn:
-        conn.row_factory = sqlite3.Row
-        rows = conn.execute(
-            "SELECT id, status FROM machines"
-        ).fetchall()
-
-        return [dict(row) for row in rows]
+    for a in averages:
+        result[a] = averages[a][0] / averages[a][1]
+    return result
     
-@app.put("/machines/{id}")
-def update_machine(id: str, update: MachineUpdate):
-    with sqlite3.connect("machines.db") as conn:
-        cursor = conn.execute(
-            "UPDATE machines " \
-            "SET status = ? " \
-            "WHERE id = ?", (update.status, id)
-        )
-        if cursor.rowcount == 0:
-            raise HTTPException(
-                status_code = status.HTTP_404_NOT_FOUND,
-                detail = "Item not found"
-            )
-            

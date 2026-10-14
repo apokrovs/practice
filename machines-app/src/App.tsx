@@ -3,14 +3,12 @@ import heroImg from './assets/hero.png'
 import reactLogo from './assets/react.svg'
 import viteLogo from './assets/vite.svg'
 import './App.css'
-import MachineComponent from './machines.tsx'
 
 function App() {
 
   return (
     <>
       
-      <MachineComponent />
 
       
     </>
@@ -18,3 +16,7 @@ function App() {
 }
 
 export default App
+
+
+
+
